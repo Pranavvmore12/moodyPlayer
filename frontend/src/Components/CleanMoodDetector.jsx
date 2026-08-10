@@ -1,7 +1,8 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as faceapi from '@vladmandic/face-api';
 
-// Map raw mood keys to display labels with emojis
+// Map raw mood keys to display labels
 const EMOJI_MAP = {
   happy: 'Happy',
   sad: 'Sad',
@@ -14,7 +15,7 @@ const EMOJI_MAP = {
 
 export default function CleanMoodDetector() {
   const videoRef = useRef(null);
-  
+
   // App State
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [detectedMood, setDetectedMood] = useState('');
@@ -32,6 +33,7 @@ export default function CleanMoodDetector() {
         faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
         faceapi.nets.faceExpressionNet.loadFromUri('/models'),
       ]);
+
       setModelsLoaded(true);
     } catch (err) {
       console.error('Failed to load models:', err);
@@ -43,8 +45,12 @@ export default function CleanMoodDetector() {
   const startWebcam = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 } },
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
       });
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -58,21 +64,32 @@ export default function CleanMoodDetector() {
   const stopWebcam = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject;
+
       stream.getTracks().forEach((track) => track.stop());
+
+      videoRef.current.srcObject = null;
     }
   };
 
   // 4. Calculate the mood with the highest confidence score
   const getDominantMood = (expressions) => {
-    const primaryKey = Object.keys(expressions).reduce((prev, current) =>
-      expressions[prev] > expressions[current] ? prev : current
+    const primaryKey = Object.keys(expressions).reduce(
+      (prev, current) =>
+        expressions[prev] > expressions[current]
+          ? prev
+          : current
     );
+
     return EMOJI_MAP[primaryKey] || primaryKey;
   };
 
   // 5. Detect mood from current video frame
   const analyzeCurrentFrame = async () => {
-    if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) {
+    if (
+      !videoRef.current ||
+      videoRef.current.paused ||
+      videoRef.current.ended
+    ) {
       return;
     }
 
@@ -80,12 +97,20 @@ export default function CleanMoodDetector() {
 
     try {
       const detection = await faceapi
-        .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+        .detectSingleFace(
+          videoRef.current,
+          new faceapi.TinyFaceDetectorOptions()
+        )
         .withFaceExpressions();
 
       if (detection && detection.expressions) {
-        const moodResult = getDominantMood(detection.expressions);
+        const moodResult = getDominantMood(
+          detection.expressions
+        );
+
         setDetectedMood(moodResult);
+
+        console.log('Detected mood:', moodResult);
       } else {
         setDetectedMood('No face detected. Try again.');
       }
@@ -111,30 +136,49 @@ export default function CleanMoodDetector() {
     if (modelsLoaded) {
       startWebcam();
     }
+
     return () => stopWebcam();
   }, [modelsLoaded]);
 
   // ----------------------------------------------------
   // RENDER UI
   // ----------------------------------------------------
+
   return (
     <div
       style={{
         width: '100%',
-        minHeight: '100vh',
+        minHeight: '50vh',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+
+        // Changed from center so content isn't vertically centered
+        justifyContent: 'flex-start',
+
         fontFamily: 'sans-serif',
+
+        // Small space around the page
         padding: '16px',
+
+        // Extra bottom breathing room
+        paddingBottom: '40px',
       }}
     >
       {!modelsLoaded ? (
-        <p style={{ fontSize: '18px' }}>Loading AI models...</p>
+        <p style={{ fontSize: '18px' }}>
+          Loading AI models...
+        </p>
       ) : cameraError ? (
-        <p style={{ color: 'red', fontSize: '18px' }}>{cameraError}</p>
+        <p
+          style={{
+            color: 'red',
+            fontSize: '18px',
+          }}
+        >
+          {cameraError}
+        </p>
       ) : (
         <div
           style={{
@@ -148,7 +192,8 @@ export default function CleanMoodDetector() {
             margin: '0 auto',
           }}
         >
-          {/* Main Container - Desktop: Side-by-Side (Row), Mobile: Stacked (Column) */}
+          {/* Main Container - Desktop: Side-by-Side
+              Mobile: Stacked */}
           <div
             style={{
               display: 'flex',
@@ -171,7 +216,8 @@ export default function CleanMoodDetector() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                boxShadow:
+                  '0 4px 12px rgba(0, 0, 0, 0.1)',
                 flexShrink: 0,
               }}
             >
@@ -210,18 +256,25 @@ export default function CleanMoodDetector() {
                   fontSize: '16px',
                   fontWeight: 'bold',
                   color: '#fff',
-                  backgroundColor: isAnalyzing ? '#888' : '#0070f3',
+                  backgroundColor: isAnalyzing
+                    ? '#888'
+                    : '#0070f3',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: isAnalyzing ? 'not-allowed' : 'pointer',
-                  transition: 'background-color 0.2s ease',
+                  cursor: isAnalyzing
+                    ? 'not-allowed'
+                    : 'pointer',
+                  transition:
+                    'background-color 0.2s ease',
                   width: '100%',
                 }}
               >
-                {isAnalyzing ? 'Analyzing...' : 'Detect Mood'}
+                {isAnalyzing
+                  ? 'Analyzing...'
+                  : 'Detect Mood'}
               </button>
 
-              {/* Fixed Slot for Mood Result to prevent layout shift */}
+              {/* Fixed Slot for Mood Result */}
               <div
                 style={{
                   minHeight: '36px',
@@ -231,8 +284,21 @@ export default function CleanMoodDetector() {
                 }}
               >
                 {detectedMood && (
-                  <h3 style={{ fontSize: 'clamp(18px, 4vw, 22px)', margin: 0 }}>
-                    Mood: <span style={{ color: '#0070f3' }}>{detectedMood}</span>
+                  <h3
+                    style={{
+                      fontSize:
+                        'clamp(18px, 4vw, 22px)',
+                      margin: 0,
+                    }}
+                  >
+                    Mood:{' '}
+                    <span
+                      style={{
+                        color: '#0070f3',
+                      }}
+                    >
+                      {detectedMood}
+                    </span>
                   </h3>
                 )}
               </div>
