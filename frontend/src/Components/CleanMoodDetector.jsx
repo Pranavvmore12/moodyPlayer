@@ -43,7 +43,7 @@ export default function CleanMoodDetector() {
   const startWebcam = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
+        video: { width: { ideal: 640 }, height: { ideal: 480 } },
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -95,7 +95,6 @@ export default function CleanMoodDetector() {
     } finally {
       setIsAnalyzing(false);
     }
-    console.log('Detected Mood:', detectedMood);
   };
 
   // ----------------------------------------------------
@@ -119,54 +118,126 @@ export default function CleanMoodDetector() {
   // RENDER UI
   // ----------------------------------------------------
   return (
-    <div style={{ textAlign: 'center', fontFamily: 'sans-serif', padding: '20px' }}>
-      
-
+    <div
+      style={{
+        width: '100%',
+        minHeight: '100vh',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'sans-serif',
+        padding: '16px',
+      }}
+    >
       {!modelsLoaded ? (
-        <p>Loading AI models...</p>
+        <p style={{ fontSize: '18px' }}>Loading AI models...</p>
       ) : cameraError ? (
-        <p style={{ color: 'red' }}>{cameraError}</p>
+        <p style={{ color: 'red', fontSize: '18px' }}>{cameraError}</p>
       ) : (
-        <div>
-          {/* Webcam Feed */}
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            width="640"
-            height="480"
-            style={{ borderRadius: '12px', transform: 'scaleX(-1)', backgroundColor: '#000' }}
-          />
-
-          {/* Action Button */}
-          <div style={{ marginTop: '20px' }}>
-            <button
-              onClick={analyzeCurrentFrame}
-              disabled={isAnalyzing}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '24px',
+            width: '100%',
+            maxWidth: '900px',
+            margin: '0 auto',
+          }}
+        >
+          {/* Main Container - Desktop: Side-by-Side (Row), Mobile: Stacked (Column) */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '32px',
+              width: '100%',
+            }}
+          >
+            {/* Webcam Frame Wrapper */}
+            <div
               style={{
-                padding: '12px 28px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                color: '#fff',
-                backgroundColor: isAnalyzing ? '#888' : '#0070f3',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: isAnalyzing ? 'not-allowed' : 'pointer',
+                width: '100%',
+                maxWidth: '480px',
+                aspectRatio: '4 / 3',
+                backgroundColor: '#000',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                flexShrink: 0,
               }}
             >
-              {isAnalyzing ? 'Analyzing...' : 'Detect Mood'}
-            </button>
-          </div>
-
-          {/* Minimal Mood Text Output Only */}
-          {detectedMood && (
-            <div style={{ marginTop: '20px' }}>
-              <h3 style={{ fontSize: '24px', margin: 0 }}>
-                Mood: <span style={{ color: '#0070f3' }}>{detectedMood}</span>
-              </h3>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  transform: 'scaleX(-1)',
+                }}
+              />
             </div>
-          )}
+
+            {/* Side Control Panel */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '16px',
+                textAlign: 'center',
+                minWidth: '220px',
+              }}
+            >
+              {/* Action Button */}
+              <button
+                onClick={analyzeCurrentFrame}
+                disabled={isAnalyzing}
+                style={{
+                  padding: '12px 28px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  color: '#fff',
+                  backgroundColor: isAnalyzing ? '#888' : '#0070f3',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: isAnalyzing ? 'not-allowed' : 'pointer',
+                  transition: 'background-color 0.2s ease',
+                  width: '100%',
+                }}
+              >
+                {isAnalyzing ? 'Analyzing...' : 'Detect Mood'}
+              </button>
+
+              {/* Fixed Slot for Mood Result to prevent layout shift */}
+              <div
+                style={{
+                  minHeight: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {detectedMood && (
+                  <h3 style={{ fontSize: 'clamp(18px, 4vw, 22px)', margin: 0 }}>
+                    Mood: <span style={{ color: '#0070f3' }}>{detectedMood}</span>
+                  </h3>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
