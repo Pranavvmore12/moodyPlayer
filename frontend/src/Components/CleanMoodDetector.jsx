@@ -13,7 +13,7 @@ const EMOJI_MAP = {
   neutral: 'Neutral',
 };
 
-export default function CleanMoodDetector() {
+export default function CleanMoodDetector({ setSongs }) {
   const videoRef = useRef(null);
 
   // App State
@@ -80,7 +80,42 @@ export default function CleanMoodDetector() {
           : current
     );
 
-    return EMOJI_MAP[primaryKey] || primaryKey;
+    return {
+      key: primaryKey,
+      label: EMOJI_MAP[primaryKey] || primaryKey,
+    };
+  };
+
+  const fetchSongsForMood = async (moodKey) => {
+    if (!setSongs) return;
+
+    try {
+      const response = await fetch(
+        `/api/songs?mood=${encodeURIComponent(moodKey)}`
+      );
+
+      if (!response.ok) {
+        console.error('Failed to fetch song for mood', response.status);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setSongs(
+          data.map((song) => ({
+            ...song,
+            isPlaying: false,
+          }))
+        );
+      } else if (data && typeof data === 'object') {
+        setSongs([{ ...data, isPlaying: false }]);
+      } else {
+        setSongs([]);
+      }
+    } catch (err) {
+      console.error('Error fetching songs:', err);
+    }
   };
 
   // 5. Detect mood from current video frame
@@ -108,9 +143,10 @@ export default function CleanMoodDetector() {
           detection.expressions
         );
 
-        setDetectedMood(moodResult);
+        setDetectedMood(moodResult.label);
+        await fetchSongsForMood(moodResult.key);
 
-        console.log('Detected mood:', moodResult);
+        console.log('Detected mood:', moodResult.key);
       } else {
         setDetectedMood('No face detected. Try again.');
       }
