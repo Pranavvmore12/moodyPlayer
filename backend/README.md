@@ -1,3 +1,7 @@
+
+Deployed at: moody-player-fawn.vercel.app 
+
+
 # Moody Player Backend
 
 This backend powers the API for the Moody Player application. It handles song storage, retrieval, MongoDB persistence, and audio upload integration through ImageKit.

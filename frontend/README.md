@@ -1,3 +1,5 @@
+Deployed at: moody-player-1tsr.vercel.app
+
 # Moody Player Frontend
 
 A modern React + Vite frontend for mood-based music discovery. The app uses your webcam to detect facial expressions, identifies the dominant mood, and fetches matching songs from the backend for instant playback.
