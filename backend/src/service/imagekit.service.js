@@ -1,4 +1,5 @@
 const ImageKit = require("imagekit");
+const mongoose = require("mongoose");
 
 const imagekit = new ImageKit({
   publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
@@ -10,7 +11,8 @@ const uploadFile = async (file) => {
   try {
     const result = await imagekit.upload({
       file: file.buffer,
-      fileName: file.originalname,
+      fileName: new mongoose.Types.ObjectId().toString(), // Generate a unique filename using ObjectId
+      folder: "moodyPlayerAudio"
     });
 
     return result;
