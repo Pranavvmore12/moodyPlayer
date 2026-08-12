@@ -4,10 +4,15 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI is not defined');
+    }
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000
+    });
     console.log('MongoDB connected');
   } catch (err) {
-    console.error('MongoDB connection failed:', err);
+    console.error('MongoDB connection failed:', err.message || err);
     throw err;
   }
 };
